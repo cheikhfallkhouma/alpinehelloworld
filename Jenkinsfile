@@ -36,23 +36,25 @@ pipeline {
                 '''
             }
         }
-        
         stage('Deploy in staging') {
-            environment {
-                HOSTNAME_DEPLOY_STAGING = "54.145.215.204"
-            }
-            steps {
-                sshagent(credentials: ['SSH_AUTH_SERVER']) {
-                    withCredentials([usernamePassword(credentialsId: 'DOCKERHUB_AUTH', usernameVariable: 'DOCKERHUB_AUTH', passwordVariable: 'DOCKERHUB_AUTH_PSW')]) {
-                        sh '''
-                            [ -d ~/.ssh ] || mkdir ~/.ssh && chmod 0700 ~/.ssh
-                            ssh-keyscan -t rsa,dsa ${HOSTNAME_DEPLOY_STAGING} >> ~/.ssh/known_hosts
-                            command1="docker login -u $DOCKERHUB_AUTH -p $DOCKERHUB_AUTH_PSW"
-                            command2="docker pull $DOCKERHUB_AUTH/$IMAGE_NAME:$IMAGE_TAG"
-                            command3="docker rm -f webapp || echo 'app does not exist'"
-                            command4="docker run -d -p 80:5000 -e PORT=5000 --name webapp $DOCKERHUB_AUTH/$IMAGE_NAME:$IMAGE_TAG"
-                            ssh -o StrictHostKeyChecking=no ubuntu@${HOSTNAME_DEPLOY_STAGING} "$command1 && $command2 && $command3 && $command4"
-                        '''
+    environment {
+        HOSTNAME_DEPLOY_STAGING = "54.145.215.204"
+    }
+    steps {
+        sshagent(credentials: ['SSH_AUTH_SERVER']) {
+            withCredentials([usernamePassword(credentialsId: 'DOCKERHUB_AUTH', usernameVariable: 'DOCKERHUB_AUTH', passwordVariable: 'DOCKERHUB_AUTH_PSW')]) {
+                sh '''
+                    [ -d ~/.ssh ] || mkdir ~/.ssh && chmod 0700 ~/.ssh
+                    ssh-keyscan -t rsa,dsa ${HOSTNAME_DEPLOY_STAGING} >> ~/.ssh/known_hosts
+
+                    command0="if ! command -v docker &> /dev/null; then sudo apt-get update -y && sudo apt-get install -y docker.io && sudo systemctl start docker && sudo systemctl enable docker; fi"
+                    command1="docker login -u $DOCKERHUB_AUTH -p $DOCKERHUB_AUTH_PSW"
+                    command2="docker pull $DOCKERHUB_AUTH/$IMAGE_NAME:$IMAGE_TAG"
+                    command3="docker rm -f webapp || echo 'app does not exist'"
+                    command4="docker run -d -p 80:5000 -e PORT=5000 --name webapp $DOCKERHUB_AUTH/$IMAGE_NAME:$IMAGE_TAG"
+
+                    ssh -o StrictHostKeyChecking=no ubuntu@${HOSTNAME_DEPLOY_STAGING} "$command0 && $command1 && $command2 && $command3 && $command4"
+                '''
                     }
                 }
             }
