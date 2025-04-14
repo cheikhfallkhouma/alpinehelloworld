@@ -37,6 +37,17 @@ pipeline {
             }
         }
 
+
+        stage('Load SSH Key') {
+            steps {
+                sh '''
+                    eval $(ssh-agent -s)
+                    ssh-add /path/to/private_key
+                '''
+            }
+        }
+
+        
         stage('Deploy in staging') {
             environment {
                 HOSTNAME_DEPLOY_STAGING = "ec2-54-145-215-204.compute-1.amazonaws.com"
@@ -51,7 +62,7 @@ pipeline {
                             command2="docker pull $DOCKERHUB_AUTH/$IMAGE_NAME:$IMAGE_TAG"
                             command3="docker rm -f webapp || echo 'app does not exist'"
                             command4="docker run -d -p 80:5000 -e PORT=5000 --name webapp $DOCKERHUB_AUTH/$IMAGE_NAME:$IMAGE_TAG"
-                            ssh -o StrictHostKeyChecking=no centos@${HOSTNAME_DEPLOY_STAGING} "$command1 && $command2 && $command3 && $command4"
+                            ssh -o StrictHostKeyChecking=no ubuntu@${HOSTNAME_DEPLOY_STAGING} "$command1 && $command2 && $command3 && $command4"
                         '''
                     }
                 }
