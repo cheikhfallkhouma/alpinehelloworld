@@ -12,7 +12,8 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(
                     credentialsId: 'DOCKERHUB_AUTH',
-                    usernameVariable: 'DOCKERHUB_AUTH'
+                    usernameVariable: 'DOCKERHUB_AUTH',
+                    passwordVariable: 'DOCKERHUB_AUTH_PSW'
                 )]) {
                     sh '''
                         echo "${DOCKERHUB_AUTH_PSW}" | docker login -u "${DOCKERHUB_AUTH}" --password-stdin
@@ -27,7 +28,8 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(
                     credentialsId: 'DOCKERHUB_AUTH',
-                    usernameVariable: 'DOCKERHUB_AUTH'
+                    usernameVariable: 'DOCKERHUB_AUTH',
+                    passwordVariable: 'DOCKERHUB_AUTH_PSW'
                 )]) {
                     sh '''
                         echo "Clean Environment"
@@ -55,7 +57,8 @@ pipeline {
                 sshagent(credentials: ['SSH_AUTH_SERVER']) {
                     withCredentials([usernamePassword(
                         credentialsId: 'DOCKERHUB_AUTH',
-                        usernameVariable: 'DOCKERHUB_AUTH'
+                        usernameVariable: 'DOCKERHUB_AUTH',
+                        passwordVariable: 'DOCKERHUB_AUTH_PSW'
                     )]) {
                         sh '''
                             # S'assurer que le dossier .ssh existe
