@@ -2,6 +2,8 @@ pipeline {
     agent any
     environment {
         PORT_EXPOSED = "80"
+        IMAGE_NAME = 'alpinehelloworld'
+        IMAGE_TAG = 'latest'
     }
     stages {
         stage('Build Image') {
