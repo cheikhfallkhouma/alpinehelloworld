@@ -69,7 +69,7 @@ pipeline {
                     command1="docker login -u $DOCKERHUB_AUTH -p $DOCKERHUB_AUTH_PSW"
                     command2="docker pull $DOCKERHUB_AUTH/$IMAGE_NAME:$IMAGE_TAG"
                     command3="docker rm -f webapp || echo 'app does not exist'"
-                    command4="docker run -d -p 80:5000 -e PORT=5000 --name webapp $DOCKERHUB_AUTH/$IMAGE_NAME:$IMAGE_TAG"
+                    command4="docker run -d -p 8080:5000 -e PORT=5000 --name webapp $DOCKERHUB_AUTH/$IMAGE_NAME:$IMAGE_TAG"
 
                     ssh -o StrictHostKeyChecking=no ubuntu@${HOSTNAME_DEPLOY_STAGING} "$command1 && $command2 && $command3 && $command4"
                 '''
