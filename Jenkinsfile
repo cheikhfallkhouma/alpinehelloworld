@@ -5,6 +5,7 @@ pipeline {
         IMAGE_NAME = 'alpinehelloworld'
         IMAGE_TAG = 'latest'
     }
+    
     stages {
         stage('Build Image') {
             steps {
