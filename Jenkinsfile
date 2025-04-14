@@ -57,6 +57,7 @@ pipeline {
                     # Vérifier que Docker est installé et en cours d'exécution
                     if ! command -v docker &> /dev/null; then
                         echo "Docker n'est pas installé. Installation en cours..."
+                        apt-get update && apt-get install -y sudo
                         sudo apt-get update
                         sudo apt-get install -y docker.io
                         sudo systemctl enable docker
