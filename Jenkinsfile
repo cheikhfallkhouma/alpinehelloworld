@@ -16,9 +16,20 @@ pipeline {
                     passwordVariable: 'DOCKERHUB_AUTH_PSW'
                 )]) {
                     sh '''
-                        echo "${DOCKERHUB_AUTH_PSW}" | docker login -u "${DOCKERHUB_AUTH}" --password-stdin
-                        docker build -t ${DOCKERHUB_AUTH}/${IMAGE_NAME}:${IMAGE_TAG} .
-                        docker push ${DOCKERHUB_AUTH}/${IMAGE_NAME}:${IMAGE_TAG}            
+
+                        echo "Clean Environment"
+                        docker rm -f $IMAGE_NAME || echo "container does not exist"
+        
+                        # Activer le support QEMU pour émulation amd64 sur ARM
+                        docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+        
+                        # Vérifier que l’émulation fonctionne
+                        docker run --rm --platform=linux/amd64 busybox uname -m
+        
+                        # Lancer le container avec la plateforme amd64
+                        docker run --platform=linux/amd64 --name $IMAGE_NAME -d -p ${PORT_EXPOSED}:5000 -e PORT=5000 ${DOCKERHUB_AUTH}/$IMAGE_NAME:$IMAGE_TAG
+
+                        sleep 5
                     '''
                 }
             }
