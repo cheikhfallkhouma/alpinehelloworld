@@ -8,29 +8,30 @@ pipeline {
     }
 
     stages {
-        stage('Build Image') {
-            steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'DOCKERHUB_AUTH',
-                    usernameVariable: 'DOCKERHUB_AUTH',
-                    passwordVariable: 'DOCKERHUB_AUTH_PSW'
-                )]) {
-                    sh '''
-                        
-                        echo "${DOCKERHUB_AUTH_PSW}" | docker login -u "${DOCKERHUB_AUTH}" --password-stdin
+    stage('Build Image') {
+        steps {
+            withCredentials([usernamePassword(
+                credentialsId: 'DOCKERHUB_AUTH',
+                usernameVariable: 'DOCKERHUB_AUTH',
+                passwordVariable: 'DOCKERHUB_AUTH_PSW'
+            )]) {
+                sh '''
+                    # Se connecter à DockerHub avec les credentials
+                    echo "${DOCKERHUB_AUTH_PSW}" | docker login -u "${DOCKERHUB_AUTH}" --password-stdin
 
-                        # Créer et utiliser un builder dockerx pour activer les multi-architectures (si pas déjà activé)
-                        docker buildx create --use
-                        docker buildx inspect --bootstrap
-                        
-                        # Construire l'image pour l'architecture amd64 et la pousser vers DockerHub
-                        docker buildx build --platform linux/amd64 -t ${DOCKERHUB_AUTH}/${IMAGE_NAME}:${IMAGE_TAG} .
-                        docker push ${DOCKERHUB_AUTH}/${IMAGE_NAME}:${IMAGE_TAG}
-                                
-                    '''
-                }
+                    # Créer et utiliser un builder dockerx pour activer les multi-architectures (si pas déjà activé)
+                    docker buildx create --use
+                    docker buildx inspect --bootstrap
+
+                    # Construire l'image pour l'architecture amd64 et la pousser vers DockerHub
+                    docker buildx build --platform linux/amd64 -t ${DOCKERHUB_AUTH}/${IMAGE_NAME}:${IMAGE_TAG} .
+                    docker push ${DOCKERHUB_AUTH}/${IMAGE_NAME}:${IMAGE_TAG}
+                '''
             }
         }
+    }
+}
+
 
         stage('Run container based on built image') {
             steps {
