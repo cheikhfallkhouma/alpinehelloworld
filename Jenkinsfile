@@ -62,11 +62,15 @@ pipeline {
                             export DOCKERHUB_AUTH_USR=$DOCKERHUB_AUTH
                             export DOCKERHUB_AUTH_PSW=$DOCKERHUB_AUTH_PSW
 
-                            # Vérification des variables
+                            # Vérification et nettoyage des variables
+                            DOCKERHUB_AUTH_USR=$(echo "$DOCKERHUB_AUTH_USR" | xargs)
+                            IMAGE_NAME=$(echo "$IMAGE_NAME" | xargs)
+                            IMAGE_TAG=$(echo "$IMAGE_TAG" | xargs)
+
                             echo "DOCKERHUB_AUTH_USR=$DOCKERHUB_AUTH_USR"
-                            echo "DOCKERHUB_AUTH_PSW=$DOCKERHUB_AUTH_PSW"
                             echo "IMAGE_NAME=$IMAGE_NAME"
                             echo "IMAGE_TAG=$IMAGE_TAG"
+                            echo "Image: ${DOCKERHUB_AUTH_USR}/${IMAGE_NAME}:${IMAGE_TAG}"
 
                             # Création du répertoire ~/.ssh si nécessaire
                             [ -d ~/.ssh ] || mkdir -p ~/.ssh && chmod 0700 ~/.ssh
