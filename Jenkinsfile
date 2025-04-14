@@ -23,6 +23,8 @@ pipeline {
                     sh '''
                         echo "Clean Environment"
                         docker rm -f $IMAGE_NAME || echo "container does not exist"
+                        # Démarrer Docker si nécessaire
+                        sudo systemctl start docker || sudo service docker start
                         docker run --name $IMAGE_NAME -d -p ${PORT_EXPOSED}:5000 -e PORT=5000 ${DOCKERHUB_AUTH}/$IMAGE_NAME:$IMAGE_TAG
                         sleep 5
                     '''
