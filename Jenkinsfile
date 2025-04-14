@@ -41,14 +41,12 @@ pipeline {
             }
         }
 
-        stage ('Deploy in staging') {
-            agent any
-            environment {
-                HOSTNAME_DEPLOY_STAGING = "ec2-54-145-215-204.compute-1.amazonaws.com"
-            }
-            steps {
-                // Ajout du node pour que Jenkins puisse accéder au contexte nécessaire
-                node {
+            stage ('Deploy in staging') {
+                agent any
+                environment {
+                    HOSTNAME_DEPLOY_STAGING = "ec2-54-145-215-204.compute-1.amazonaws.com"
+                }
+                steps {
                     sshagent(credentials: ['SSH_AUTH_SERVER']) {
                         sh '''
                             [ -d ~/.ssh ] || mkdir ~/.ssh && chmod 0700 ~/.ssh
@@ -57,13 +55,7 @@ pipeline {
                             command2="docker pull $DOCKERHUB_AUTH_USR/$IMAGE_NAME:$IMAGE_TAG"
                             command3="docker rm -f webapp || echo 'app does not exist'"
                             command4="docker run -d -p 80:5000 -e PORT=5000 --name webapp $DOCKERHUB_AUTH_USR/$IMAGE_NAME:$IMAGE_TAG"
-                            # Utilisation de ssh -i pour la clé privée SSH injectée par sshagent
-                            ssh -i $SSH_AUTH_SERVER -t centos@${HOSTNAME_DEPLOY_STAGING} \
-                                -o SendEnv=IMAGE_NAME \
-                                -o SendEnv=IMAGE_TAG \
-                                -o SendEnv=DOCKERHUB_AUTH_USR \
-                                -o SendEnv=DOCKERHUB_AUTH_PSW \
-                                -C "$command1 && $command2 && $command3 && $command4"
+                            ssh -o StrictHostKeyChecking=no centos@${HOSTNAME_DEPLOY_STAGING} "$command1 && $command2 && $command3 && $command4"
                         '''
                     }
                 }
