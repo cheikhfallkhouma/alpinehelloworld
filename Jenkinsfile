@@ -5,7 +5,6 @@ pipeline {
         PORT_EXPOSED = "80"
         IMAGE_NAME = 'alpinehelloworld'
         IMAGE_TAG = 'latest'
-        DOCKERHUB_AUTH = credentials('DOCKERHUB_AUTH')
     }
 
     stages {
