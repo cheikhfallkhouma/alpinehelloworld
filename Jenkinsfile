@@ -59,44 +59,38 @@ pipeline {
                         passwordVariable: 'DOCKERHUB_AUTH_PSW'
                     )]) {
                         sh '''
-                            export DOCKERHUB_AUTH_USR=$DOCKERHUB_AUTH
-                            export DOCKERHUB_AUTH_PSW=$DOCKERHUB_AUTH_PSW
-
-                            # Vérification et nettoyage des variables
-                            DOCKERHUB_AUTH_USR=$(echo "$DOCKERHUB_AUTH_USR" | xargs)
-                            IMAGE_NAME=$(echo "$IMAGE_NAME" | xargs)
-                            IMAGE_TAG=$(echo "$IMAGE_TAG" | xargs)
-
-                            echo "DOCKERHUB_AUTH_USR=$DOCKERHUB_AUTH_USR"
-                            echo "IMAGE_NAME=$IMAGE_NAME"
-                            echo "IMAGE_TAG=$IMAGE_TAG"
-                            echo "Image: ${DOCKERHUB_AUTH_USR}/${IMAGE_NAME}:${IMAGE_TAG}"
-
-                            # Création du répertoire ~/.ssh si nécessaire
+                            # S'assurer que le dossier .ssh existe
                             [ -d ~/.ssh ] || mkdir -p ~/.ssh && chmod 0700 ~/.ssh
-                            ssh-keyscan -H $HOSTNAME_DEPLOY_STAGING >> ~/.ssh/known_hosts
+                            ssh-keyscan -t rsa,dsa ${HOSTNAME_DEPLOY_STAGING} >> ~/.ssh/known_hosts
 
-                            # Installation de Docker sur l'hôte distant
-                            ssh ubuntu@$HOSTNAME_DEPLOY_STAGING "
-                                sudo dpkg --configure -a;
-                                sudo apt-get install -f -y;
-                                sudo apt-get remove --purge -y docker docker.io docker-engine docker-ce docker-ce-cli containerd runc || true;
-                                sudo apt-get autoremove -y;
-                                sudo apt-get clean;
-                                curl -fsSL https://get.docker.com | sudo sh;
+                            # Exécuter les commandes Docker sur le serveur distant
+                            ssh ubuntu@${HOSTNAME_DEPLOY_STAGING} << 'EOF'
+                                # Vérification si Docker est installé
+                                if ! command -v docker &> /dev/null; then
+                                    echo "Docker non installé, installation via script officiel..."
+                                    curl -fsSL https://get.docker.com | sh
+                                fi
+
+                                # Démarrer Docker si nécessaire
+                                if ! pgrep dockerd > /dev/null; then
+                                    echo "Démarrage du daemon Docker..."
+                                    sudo systemctl start docker
+                                fi
+
+                                # Ajouter l'utilisateur à Docker si nécessaire
                                 sudo usermod -aG docker ubuntu
-                            "
+                            EOF
 
-                            # Affichage de l'image avant d'essayer de la récupérer
-                            echo "Image to pull: ${DOCKERHUB_AUTH_USR}/${IMAGE_NAME}:${IMAGE_TAG}"
+                            # Afficher l'image à tirer
+                            echo "Image to pull: ${DOCKERHUB_AUTH}/${IMAGE_NAME}:${IMAGE_TAG}"
 
-                            # Docker login et déploiement de l'application
-                            ssh ubuntu@$HOSTNAME_DEPLOY_STAGING '
-                                echo "${DOCKERHUB_AUTH_PSW}" | docker login -u "${DOCKERHUB_AUTH_USR}" --password-stdin &&
-                                docker pull "${DOCKERHUB_AUTH_USR}/${IMAGE_NAME}:${IMAGE_TAG}" &&
+                            # Login Docker, pull de l'image, suppression de l'ancien container et démarrage du nouveau
+                            ssh ubuntu@${HOSTNAME_DEPLOY_STAGING} << 'EOF'
+                                docker login -u "${DOCKERHUB_AUTH}" -p "${DOCKERHUB_AUTH_PSW}" &&
+                                docker pull "${DOCKERHUB_AUTH}/${IMAGE_NAME}:${IMAGE_TAG}" &&
                                 docker rm -f webapp || echo "app does not exist" &&
-                                docker run -d -p 80:5000 -e PORT=5000 --name webapp "${DOCKERHUB_AUTH_USR}/${IMAGE_NAME}:${IMAGE_TAG}"
-                            '
+                                docker run -d -p 80:5000 -e PORT=5000 --name webapp "${DOCKERHUB_AUTH}/${IMAGE_NAME}:${IMAGE_TAG}"
+                            EOF
                         '''
                     }
                 }
