@@ -18,12 +18,20 @@ pipeline {
                     sh '''
 
                         echo "${DOCKERHUB_AUTH_PSW}" | docker login -u "${DOCKERHUB_AUTH}" --password-stdin
-
-                        # Créer et utiliser un builder dockerx pour activer les multi-architectures
-                        docker buildx create --use || true
-                        docker buildx inspect --bootstrap
         
-                        # Construire l'image pour l'architecture amd64 et la pousser vers DockerHub
+                        # Installer buildx
+                        mkdir -p ~/.docker/cli-plugins
+                        curl -sSL https://github.com/docker/buildx/releases/latest/download/buildx-v0.12.0.linux-amd64 -o ~/.docker/cli-plugins/docker-buildx
+                        chmod +x ~/.docker/cli-plugins/docker-buildx
+        
+                        # Vérifier l'installation
+                        docker buildx version
+        
+                        # Créer et utiliser builder
+                        docker buildx create --name mybuilder --use || true
+                        docker buildx inspect mybuilder --bootstrap
+        
+                        # Build & push multi-arch image
                         docker buildx build --platform linux/amd64 -t ${DOCKERHUB_AUTH}/${IMAGE_NAME}:${IMAGE_TAG} --push .
 
                         sleep 5
