@@ -41,31 +41,8 @@ pipeline {
             }
         }
 
-        stage('Clean Container') {
-            agent any
-            steps {
-                script {
-                    sh '''
-                        docker stop $IMAGE_NAME
-                        docker rm $IMAGE_NAME
-                    '''
-                }
-            }
-        }
 
-        stage ('Login and Push Image on docker hub') {
-            agent any           
-            steps {
-                script {
-                    sh '''
-                        docker login -u $DOCKERHUB_AUTH_USR -p $DOCKERHUB_AUTH_PSW
-                        docker push ${ID_DOCKER}/$IMAGE_NAME:$IMAGE_TAG
-                    '''
-                }
-            }
-        }
-
-        stage ('Deploy in staging') {
+                stage ('Deploy in staging') {
             agent any
             environment {
                 HOSTNAME_DEPLOY_STAGING = "ec2-54-145-215-204.compute-1.amazonaws.com"
@@ -79,7 +56,8 @@ pipeline {
                         command2="docker pull $DOCKERHUB_AUTH_USR/$IMAGE_NAME:$IMAGE_TAG"
                         command3="docker rm -f webapp || echo 'app does not exist'"
                         command4="docker run -d -p 80:5000 -e PORT=5000 --name webapp $DOCKERHUB_AUTH_USR/$IMAGE_NAME:$IMAGE_TAG"
-                        ssh -t centos@${HOSTNAME_DEPLOY_STAGING} \
+                        # Utilisation de ssh -i pour la clé privée SSH injectée par sshagent
+                        ssh -i $SSH_AUTH_SERVER -t centos@${HOSTNAME_DEPLOY_STAGING} \
                             -o SendEnv=IMAGE_NAME \
                             -o SendEnv=IMAGE_TAG \
                             -o SendEnv=DOCKERHUB_AUTH_USR \
@@ -89,6 +67,5 @@ pipeline {
                 }
             }
         }
-
     }
 }
