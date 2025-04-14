@@ -73,6 +73,7 @@ pipeline {
                                 '
             
                             # Lancement du container avec les variables d'env transmises via SendEnv
+                           # Lancement du container avec les variables d'env transmises via SendEnv
                             ssh -t \
                                 -o SendEnv=DOCKERHUB_AUTH_USR \
                                 -o SendEnv=DOCKERHUB_AUTH_PSW \
@@ -83,6 +84,7 @@ pipeline {
                                     docker pull $DOCKERHUB_AUTH_USR/$IMAGE_NAME:$IMAGE_TAG &&
                                     docker rm -f mywebapp || echo "app does not exist" &&
                                     docker run -d -p 8081:5000 -e PORT=5000 --name mywebapp $DOCKERHUB_AUTH_USR/$IMAGE_NAME:$IMAGE_TAG
+                                '
                         '''              
                     }
                 }
