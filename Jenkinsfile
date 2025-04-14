@@ -17,9 +17,8 @@ pipeline {
                 )]) {
                     sh '''
                         echo "${DOCKERHUB_AUTH_PSW}" | docker login -u "${DOCKERHUB_AUTH}" --password-stdin
-                        docker buildx create --use || true
-                        docker buildx build --platform linux/amd64 -t ${DOCKERHUB_AUTH}/${IMAGE_NAME}:${IMAGE_TAG} --push .
-            
+                        docker build -t ${DOCKERHUB_AUTH}/${IMAGE_NAME}:${IMAGE_TAG} .
+                        docker push ${DOCKERHUB_AUTH}/${IMAGE_NAME}:${IMAGE_TAG}            
                     '''
                 }
             }
