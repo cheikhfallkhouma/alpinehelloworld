@@ -37,7 +37,7 @@ pipeline {
             }
         }
         
-       stage('Deploy in staging') {
+      stage('Deploy in staging') {
     environment {
         HOSTNAME_DEPLOY_STAGING = "54.145.215.204"
     }
@@ -49,18 +49,24 @@ pipeline {
                     [ -d ~/.ssh ] || mkdir ~/.ssh && chmod 0700 ~/.ssh
                     ssh-keyscan -t rsa,dsa ${HOSTNAME_DEPLOY_STAGING} >> ~/.ssh/known_hosts
                     
+                    # Vérifier si le groupe docker existe, sinon le créer
+                    if ! getent group docker > /dev/null; then
+                        echo "Le groupe docker n'existe pas. Création en cours..."
+                        sudo groupadd docker
+                    fi
+                    
                     # Ajouter l'utilisateur Jenkins au groupe docker si ce n'est pas déjà fait
                     if ! groups $(whoami) | grep -q '\bdocker\b'; then
                         echo "Ajout de l'utilisateur au groupe docker..."
-                        usermod -aG docker $(whoami)
+                        sudo usermod -aG docker $(whoami)
                     fi
                     
                     # Vérifier que Docker est installé et en cours d'exécution
                     if ! command -v docker &> /dev/null; then
                         echo "Docker n'est pas installé. Installation en cours..."
-                        apt-get update && apt-get install -y docker.io
-                        systemctl enable docker
-                        systemctl start docker
+                        sudo apt-get update && sudo apt-get install -y docker.io
+                        sudo systemctl enable docker
+                        sudo systemctl start docker
                     fi
                     
                     # Exécuter les commandes Docker
@@ -72,6 +78,11 @@ pipeline {
                     # Exécuter les commandes sur le serveur distant
                     ssh -o StrictHostKeyChecking=no ubuntu@${HOSTNAME_DEPLOY_STAGING} "$command1 && $command2 && $command3 && $command4"
                 '''
+            }
+        }
+    }
+}
+
                     }
                 }
             }
