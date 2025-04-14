@@ -36,17 +36,6 @@ pipeline {
                 '''
             }
         }
-
-
-        stage('Load SSH Key') {
-            steps {
-                sh '''
-                    eval $(ssh-agent -s)
-                    ssh-add /path/to/private_key
-                '''
-            }
-        }
-
         
         stage('Deploy in staging') {
             environment {
