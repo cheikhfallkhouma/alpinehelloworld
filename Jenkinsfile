@@ -4,6 +4,7 @@ pipeline {
         DOCKERHUB_AUTH = credentials('DOCKERHUB_AUTH')
         ID_DOCKER = "${DOCKERHUB_AUTH_USR}"
         PORT_EXPOSED = "80"
+        SSH_AUTH_SERVER = credentials('SSH_AUTH_SERVER')
     }
     stages {
         stage ('Build Image') {
