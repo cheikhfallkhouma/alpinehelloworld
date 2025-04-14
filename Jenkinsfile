@@ -89,30 +89,5 @@ pipeline {
             }
         }
 
-        # stage ('Deploy in prod') {
-        #     agent any
-        #     environment {
-        #         HOSTNAME_DEPLOY_PROD = "ec2-50-17-119-91.compute-1.amazonaws.com"
-        #     }
-        #     steps {
-        #         sshagent(credentials: ['SSH_AUTH_PROD']) {
-        #             sh '''
-        #                 [ -d ~/.ssh ] || mkdir ~/.ssh && chmod 0700 ~/.ssh
-        #                 ssh-keyscan -t rsa,dsa ${HOSTNAME_DEPLOY_PROD} >> ~/.ssh/known_hosts
-        #                 command1="docker login -u $DOCKERHUB_AUTH_USR -p $DOCKERHUB_AUTH_PSW"
-        #                 command2="docker pull $DOCKERHUB_AUTH_USR/$IMAGE_NAME:$IMAGE_TAG"
-        #                 command3="docker rm -f webapp || echo 'app does not exist'"
-        #                 command4="docker run -d -p 80:5000 -e PORT=5000 --name webapp $DOCKERHUB_AUTH_USR/$IMAGE_NAME:$IMAGE_TAG"
-        #                 ssh -t centos@${HOSTNAME_DEPLOY_PROD} \
-        #                     -o SendEnv=IMAGE_NAME \
-        #                     -o SendEnv=IMAGE_TAG \
-        #                     -o SendEnv=DOCKERHUB_AUTH_USR \
-        #                     -o SendEnv=DOCKERHUB_AUTH_PSW \
-        #                     -C "$command1 && $command2 && $command3 && $command4"
-        #             '''
-        #         }
-        #     }
-        #}
-
     }
 }
