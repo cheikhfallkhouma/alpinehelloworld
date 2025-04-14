@@ -17,18 +17,14 @@ pipeline {
                 )]) {
                     sh '''
 
+                        echo "${DOCKERHUB_AUTH_PSW}" | docker login -u "${DOCKERHUB_AUTH}" --password-stdin
+
+                        # Créer et utiliser un builder dockerx pour activer les multi-architectures
+                        docker buildx create --use || true
+                        docker buildx inspect --bootstrap
         
-                        echo "=== Clean Environment ==="
-                        docker rm -f $IMAGE_NAME || echo "Container does not exist"
-        
-                        echo "=== Enable QEMU emulation for amd64 ==="
-                        docker run --rm --privileged tonistiigi/binfmt --install all
-        
-                        echo "=== Check if QEMU works ==="
-                        docker run --rm --platform=linux/amd64 busybox uname -m
-        
-                        echo "=== Run container with --platform linux/amd64 ==="
-                        docker run --platform=linux/amd64 --name $IMAGE_NAME -d -p ${PORT_EXPOSED}:5000 -e PORT=5000 ${DOCKERHUB_AUTH}/$IMAGE_NAME:$IMAGE_TAG
+                        # Construire l'image pour l'architecture amd64 et la pousser vers DockerHub
+                        docker buildx build --platform linux/amd64 -t ${DOCKERHUB_AUTH}/${IMAGE_NAME}:${IMAGE_TAG} --push .
 
                         sleep 5
                     '''
