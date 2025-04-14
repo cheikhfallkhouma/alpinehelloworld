@@ -63,34 +63,33 @@ pipeline {
                             [ -d ~/.ssh ] || mkdir -p ~/.ssh && chmod 0700 ~/.ssh
                             ssh-keyscan -t rsa,dsa ${HOSTNAME_DEPLOY_STAGING} >> ~/.ssh/known_hosts
 
-                            # Exécuter les commandes Docker sur le serveur distant
-                            ssh ubuntu@${HOSTNAME_DEPLOY_STAGING} << 'EOF'
-                                # Vérification si Docker est installé
+                            # Vérification si Docker est installé, si ce n'est pas le cas, installation
+                            ssh ubuntu@${HOSTNAME_DEPLOY_STAGING} "
                                 if ! command -v docker &> /dev/null; then
-                                    echo "Docker non installé, installation via script officiel..."
+                                    echo 'Docker non installé, installation via script officiel...'
                                     curl -fsSL https://get.docker.com | sh
                                 fi
 
                                 # Démarrer Docker si nécessaire
                                 if ! pgrep dockerd > /dev/null; then
-                                    echo "Démarrage du daemon Docker..."
+                                    echo 'Démarrage du daemon Docker...'
                                     sudo systemctl start docker
                                 fi
 
-                                # Ajouter l'utilisateur à Docker si nécessaire
+                                # Ajouter l'utilisateur ubuntu au groupe docker
                                 sudo usermod -aG docker ubuntu
-                            EOF
+                            "
 
-                            # Afficher l'image à tirer
+                            # Affichage de l'image avant de la récupérer
                             echo "Image to pull: ${DOCKERHUB_AUTH}/${IMAGE_NAME}:${IMAGE_TAG}"
 
-                            # Login Docker, pull de l'image, suppression de l'ancien container et démarrage du nouveau
-                            ssh ubuntu@${HOSTNAME_DEPLOY_STAGING} << 'EOF'
-                                docker login -u "${DOCKERHUB_AUTH}" -p "${DOCKERHUB_AUTH_PSW}" &&
-                                docker pull "${DOCKERHUB_AUTH}/${IMAGE_NAME}:${IMAGE_TAG}" &&
-                                docker rm -f webapp || echo "app does not exist" &&
-                                docker run -d -p 80:5000 -e PORT=5000 --name webapp "${DOCKERHUB_AUTH}/${IMAGE_NAME}:${IMAGE_TAG}"
-                            EOF
+                            # Commandes Docker à exécuter à distance
+                            ssh ubuntu@${HOSTNAME_DEPLOY_STAGING} "
+                                docker login -u '${DOCKERHUB_AUTH}' -p '${DOCKERHUB_AUTH_PSW}' &&
+                                docker pull '${DOCKERHUB_AUTH}/${IMAGE_NAME}:${IMAGE_TAG}' &&
+                                docker rm -f webapp || echo 'app does not exist' &&
+                                docker run -d -p 80:5000 -e PORT=5000 --name webapp '${DOCKERHUB_AUTH}/${IMAGE_NAME}:${IMAGE_TAG}'
+                            "
                         '''
                     }
                 }
