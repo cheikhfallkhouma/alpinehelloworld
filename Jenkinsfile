@@ -100,5 +100,46 @@ pipeline {
                 }
             }
         }
+
+        stage('Deploy in production') {
+            environment {
+                HOSTNAME_DEPLOY_PROD = "3.89.102.99"
+            }
+            steps {
+                sshagent(credentials: ['SSH_AUTH_SERVER']) {
+                    withCredentials([usernamePassword(
+                        credentialsId: 'DOCKERHUB_AUTH',
+                        usernameVariable: 'DOCKERHUB_AUTH',
+                        passwordVariable: 'DOCKERHUB_AUTH_PSW'
+                    )]) {
+                        sh '''
+                            echo "Ajout de la clé SSH du serveur de production"
+                            [ -d ~/.ssh ] || mkdir -p ~/.ssh && chmod 0700 ~/.ssh
+                            ssh-keyscan -t rsa,dsa ${HOSTNAME_DEPLOY_PROD} >> ~/.ssh/known_hosts
+
+                            echo "Connexion au serveur de production et déploiement"
+                            ssh ubuntu@${HOSTNAME_DEPLOY_PROD} "
+                                if ! command -v docker &> /dev/null; then
+                                    echo 'Docker non installé. Installation en cours...'
+                                    curl -fsSL https://get.docker.com | sh
+                                fi
+
+                                sudo systemctl start docker || true
+                                sudo usermod -aG docker ubuntu
+
+                                docker login -u '${DOCKERHUB_AUTH}' -p '${DOCKERHUB_AUTH_PSW}' &&
+                                docker pull '${DOCKERHUB_AUTH}/${IMAGE_NAME}:${IMAGE_TAG}' &&
+                                docker rm -f prodapp || echo 'prodapp does not exist' &&
+                                docker run -d -p 443:5000 -e PORT=5000 --name prodapp '${DOCKERHUB_AUTH}/${IMAGE_NAME}:${IMAGE_TAG}'
+
+                                sleep 3 &&
+                                docker ps -a --filter name=prodapp &&
+                                docker logs prodapp
+                            "
+                        '''
+                    }
+                }
+            }
+        }
     }
 }
