@@ -1,6 +1,6 @@
 pipeline {
     agent any
-
+    
     environment {
         PORT_EXPOSED = "80"
         IMAGE_NAME = 'alpinehelloworld'
@@ -81,7 +81,7 @@ pipeline {
                                 # Ajouter l'utilisateur ubuntu au groupe docker
                                 sudo usermod -aG docker ubuntu
                             "
-
+                            
                             # Affichage de l'image avant de la récupérer
                             echo "Image to pull: ${DOCKERHUB_AUTH}/${IMAGE_NAME}:${IMAGE_TAG}"
 
@@ -93,7 +93,7 @@ pipeline {
                                 docker run -d -p 80:5000 -e PORT=5000 --name webapp '${DOCKERHUB_AUTH}/${IMAGE_NAME}:${IMAGE_TAG}'
                                 sleep 3 &&
                                 docker ps -a --filter name=webapp &&
-                                docker logs webapp
+                               # docker logs webapp
                             "
                         '''
                     }
