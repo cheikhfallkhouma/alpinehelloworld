@@ -93,7 +93,7 @@ pipeline {
                                 docker run -d -p 80:5000 -e PORT=5000 --name webapp '${DOCKERHUB_AUTH}/${IMAGE_NAME}:${IMAGE_TAG}'
                                 sleep 3 &&
                                 docker ps -a --filter name=webapp &&
-                               # docker logs webapp
+                                docker logs webapp
                             "
                         '''
                     }
