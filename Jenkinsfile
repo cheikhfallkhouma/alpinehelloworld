@@ -8,7 +8,7 @@ pipeline {
     }
 
     stages {
-        stage('Build Image') {
+        stage('Build Image and push image') {
             steps {
                 withCredentials([usernamePassword(
                     credentialsId: 'DOCKERHUB_AUTH',
