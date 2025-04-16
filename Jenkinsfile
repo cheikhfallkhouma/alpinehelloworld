@@ -117,7 +117,6 @@ pipeline {
                             [ -d ~/.ssh ] || mkdir -p ~/.ssh && chmod 0700 ~/.ssh
                             ssh-keyscan -t rsa,dsa ${HOSTNAME_DEPLOY_PROD} >> ~/.ssh/known_hosts
 
-                            echo "Connexion au serveur de production et déploiement"
                             ssh ubuntu@${HOSTNAME_DEPLOY_PROD} "
                                 if ! command -v docker &> /dev/null; then
                                     echo 'Docker non installé. Installation en cours...'
@@ -127,14 +126,13 @@ pipeline {
                                 sudo systemctl start docker || true
                                 sudo usermod -aG docker ubuntu
 
-                                docker login -u '${DOCKERHUB_AUTH}' -p '${DOCKERHUB_AUTH_PSW}' &&
-                                docker pull '${DOCKERHUB_AUTH}/${IMAGE_NAME}:${IMAGE_TAG}' &&
-                                docker rm -f prodapp || echo 'prodapp does not exist' &&
-                                docker run -d -p 443:5000 -e PORT=5000 --name prodapp '${DOCKERHUB_AUTH}/${IMAGE_NAME}:${IMAGE_TAG}'
-
-                                sleep 3 &&
-                                docker ps -a --filter name=prodapp &&
-                                docker logs prodapp
+                                echo '${DOCKERHUB_AUTH_PSW}' | sudo docker login -u '${DOCKERHUB_AUTH}' --password-stdin
+                                sudo docker pull '${DOCKERHUB_AUTH}/${IMAGE_NAME}:${IMAGE_TAG}'
+                                sudo docker rm -f prodapp || echo 'prodapp does not exist'
+                                sudo docker run -d -p 443:5000 -e PORT=5000 --name prodapp '${DOCKERHUB_AUTH}/${IMAGE_NAME}:${IMAGE_TAG}'
+                                sleep 3
+                                sudo docker ps -a --filter name=prodapp
+                                sudo docker logs prodapp
                             "
                         '''
                     }
