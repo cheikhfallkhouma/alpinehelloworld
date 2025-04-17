@@ -100,7 +100,6 @@ pipeline {
                 }
             }
         }
-
         
  // 🔘 Étape de validation manuelle avant la production
         stage('Approval before Prod') {
