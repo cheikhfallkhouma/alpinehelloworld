@@ -6,7 +6,7 @@ pipeline {
         IMAGE_NAME = 'alpinehelloworld'
         IMAGE_TAG = 'latest'
     }
-
+    
     stages {
         stage('Build Image and push image') {
             steps {
@@ -101,7 +101,7 @@ pipeline {
             }
         }
         
- // 🔘 Étape de validation manuelle avant la production
+ //  🔘 Étape de validation manuelle avant la production
         stage('Approval before Prod') {
             steps {
                 script {
