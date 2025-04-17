@@ -101,6 +101,16 @@ pipeline {
             }
         }
 
+        stage('Validation manuelle - Production') {
+    steps {
+        input(
+            message: 'Souhaitez-vous valider le déploiement en PRODUCTION ?',
+            ok: 'Valider'
+        )
+    }
+}
+
+
         stage('Deploy in production') {
             environment {
                 HOSTNAME_DEPLOY_PROD = "54.172.219.101"
