@@ -101,6 +101,25 @@ pipeline {
             }
         }
 
+        
+ // 🔘 Étape de validation manuelle avant la production
+        stage('Approval before Prod') {
+            steps {
+                script {
+                    def userInput = input(
+                        id: 'DeployProdApproval',
+                        message: 'Déployer en production ?',
+                        parameters: [
+                            [$class: 'BooleanParameterDefinition', defaultValue: false, description: 'Cochez pour confirmer le déploiement', name: 'CONFIRM']
+                        ]
+                    )
+                    if (!userInput) {
+                        error("Déploiement en production annulé par l'utilisateur.")
+                    }
+                }
+            }
+        }
+
         stage('Deploy in production') {
             environment {
                 HOSTNAME_DEPLOY_PROD = "54.172.219.101"
